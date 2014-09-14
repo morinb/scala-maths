@@ -49,23 +49,8 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Int) {
   def ==(that: Matrix): Boolean = this equals that
 
   override def equals(other: Any): Boolean = other match {
-    case that: Matrix=> this innerEquals that
+    case that: Matrix=> this.mat.deep == that.mat.deep
     case _ => false
-  }
-
-  private[matrix] def innerEquals(that: Matrix): Boolean = {
-    if (rowNumber != that.rowNumber || colNumber != that.colNumber) false
-    else {
-      val res = for {
-        r <- 0 until rowNumber
-      } yield compareArray(apply(r), that(r))
-
-      res.foldLeft(true) {_ && _}
-    }
-  }
-
-  private[matrix] def compareArray(a1: Array[Int], a2: Array[Int]): Boolean = {
-    a1.corresponds(a2) {_ == _}
   }
 
   def apply(r: Int, c: Int) = mat(r)(c)
