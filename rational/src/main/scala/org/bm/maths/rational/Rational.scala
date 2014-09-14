@@ -25,7 +25,7 @@ import scala.annotation.tailrec
  * .
  * @author Baptiste Morin
  */
-class Rational(val _numerator: Int, _denominator: Int) extends Ordered[Rational] {
+case class Rational(_numerator: Int, _denominator: Int) extends Ordered[Rational] {
 
   require(_denominator != 0)
 
@@ -59,13 +59,21 @@ class Rational(val _numerator: Int, _denominator: Int) extends Ordered[Rational]
 
   def reciprocal: Rational = Rational(denominator, numerator)
 
-  def *(that: Rational): Rational = Rational(numerator * that.numerator, denominator)
+  def *(that: Rational): Rational = Rational(numerator * that.numerator, denominator * that.denominator)
+
+  def *(n: Int): Rational = Rational(n * numerator, denominator)
 
   def /(that: Rational): Rational = this * (that reciprocal)
 
   def /(n: Int): Rational = Rational(numerator, denominator * n)
 
-  override def toString: String = s"$numerator/$denominator"
+  private def asString: String = s"$numerator/$denominator"
+
+  override def toString = this match {
+    case Rational(n, 1) => n.toString
+    case Rational(0, _) => "0"
+    case _ => asString
+  }
 
   private[Rational] def pow(a: Int, n: Int): Int = {
 
@@ -90,7 +98,7 @@ class Rational(val _numerator: Int, _denominator: Int) extends Ordered[Rational]
 }
 
 object Rational {
-  def apply(num: Int, den: Int) = new Rational(num, den)
+  //def apply(num: Int, den: Int) = new Rational(num, den)
 
   def apply(real: Int) = new Rational(real, 1)
 

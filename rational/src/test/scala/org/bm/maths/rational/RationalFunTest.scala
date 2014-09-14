@@ -19,6 +19,7 @@
 
 package org.bm.maths.rational
 
+import org.bm.maths.rational.Rational.Implicits._
 import org.scalatest.FunSuite
 
 /**
@@ -26,9 +27,9 @@ import org.scalatest.FunSuite
  * @author Baptiste Morin
  */
 class RationalFunTest extends FunSuite {
-
+/*
   test("powerOf") {
-    val r : Rational = Rational(2, 3)
+    val r: Rational = Rational(2, 3)
 
     val expected = Rational(4, 9)
 
@@ -36,6 +37,10 @@ class RationalFunTest extends FunSuite {
   }
 
   test("reduction") {
-    assert(Rational(2/4).toString === Rational(1/2).toString)
+    assert(Rational(2, 4).toString === Rational(1, 2).toString)
+  }*/
+
+  test("multiplication") {
+    assert(2 * Rational(1, 2) === Rational(1))
   }
 }
