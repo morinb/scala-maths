@@ -39,6 +39,7 @@ class SComplexFunTest extends FunSuite {
 
   test("toString") {
     assert((7 + 5 * i).toString === "7.0+5.0*i")
+    assert(i.toString === "i")
   }
 
   test("addition") {

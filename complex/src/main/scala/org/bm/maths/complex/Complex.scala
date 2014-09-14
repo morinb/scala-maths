@@ -25,7 +25,7 @@ import java.lang.Math.{pow, sqrt}
  * .
  * @author Baptiste Morin
  */
-class Complex(_real: Double, _imag: Double) extends Ordered[Complex] {
+case class Complex(_real: Double, _imag: Double) extends Ordered[Complex] {
   lazy val real = _real
 
   lazy val imag = _imag
@@ -67,7 +67,15 @@ class Complex(_real: Double, _imag: Double) extends Ordered[Complex] {
     case _ => false
   }
 
-  override def toString = {
+  override def toString = this match {
+    case Complex.i => "i"
+    case Complex(re, 0) => re.toString
+    case Complex(0, im) => im.toString + "*i"
+    case _ => asString
+  }
+
+
+  private def asString: String = {
     val sb = new StringBuilder
     if (real != 0) {
       sb ++= s"$real"
@@ -91,7 +99,8 @@ object Complex {
   val i = Complex(0, 1)
 
   def apply(real: Double): Complex = new Complex(real, 0)
-  def apply(real: Double, imag: Double): Complex = new Complex(real, imag)
+
+//  def apply(real: Double, imag: Double): Complex = new Complex(real, imag)
 
   object Implicits {
     implicit def fromDoubleToComplex(real: Double): Complex = Complex(real)
