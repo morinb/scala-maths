@@ -98,8 +98,6 @@ case class Rational(_numerator: Int, _denominator: Int) extends Ordered[Rational
 }
 
 object Rational {
-  //def apply(num: Int, den: Int) = new Rational(num, den)
-
   def apply(real: Int) = new Rational(real, 1)
 
   object Implicits {
