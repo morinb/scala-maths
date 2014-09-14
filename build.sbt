@@ -11,4 +11,8 @@ libraryDependencies ++= Seq(
 
 lazy val complex = project
 
-lazy val matrix = project.dependsOn(complex)
+lazy val rational = project
+
+lazy val matrix = project dependsOn complex
+
+lazy val `scala-maths` = project in file(".") aggregate (rational, complex, matrix)
