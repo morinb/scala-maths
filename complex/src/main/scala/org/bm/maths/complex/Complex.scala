@@ -100,8 +100,6 @@ object Complex {
 
   def apply(real: Double): Complex = new Complex(real, 0)
 
-//  def apply(real: Double, imag: Double): Complex = new Complex(real, imag)
-
   object Implicits {
     implicit def fromDoubleToComplex(real: Double): Complex = Complex(real)
 
