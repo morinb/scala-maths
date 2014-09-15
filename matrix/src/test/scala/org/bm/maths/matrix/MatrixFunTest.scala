@@ -20,6 +20,7 @@
 package org.bm.maths.matrix
 
 import org.bm.maths.matrix.Matrix._
+import org.bm.maths.matrix.Matrix.Implicits._
 import org.scalatest.FunSuite
 
 /**
@@ -44,7 +45,7 @@ class MatrixFunTest extends FunSuite {
   }
 
   test("copy") {
-    val arr = Array(Array(1,2,3), Array(4,5,6), Array(7,8,9))
+    val arr = Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9))
 
     val m = Matrix(arr)
 
@@ -54,8 +55,8 @@ class MatrixFunTest extends FunSuite {
   }
 
   test("copy from vector") {
-    val expected = Matrix(Array(Array(1,2,3), Array(4,5,6), Array(7,8,9)))
-    val vector = Array(1,2,3,4,5,6,7,8,9)
+    val expected: Matrix = Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9))
+    val vector = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
 
     val m = Matrix(vector, 3)
 

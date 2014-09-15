@@ -72,6 +72,10 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Int) {
 
 object Matrix {
 
+  object Implicits {
+    implicit def fromArrayOfArrayToMatrix(array: Array[Array[Int]]): Matrix = Matrix(array)
+  }
+
   private[matrix] def constant(value: Int) = (_: Int, _: Int) => value
 
   def identity(rowNumber: Int, colNumber: Int) = Matrix(rowNumber, colNumber, (r, c) => if (r == c) 1 else 0)
