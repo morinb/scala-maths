@@ -42,6 +42,7 @@ class MatrixFunTest extends FunSuite {
     val eye3 = identity(3, 3)
 
     assert(eye3.trace === 3)
+    assert(eye3.trace2 === 3)
   }
 
   test("copy") {
@@ -55,7 +56,7 @@ class MatrixFunTest extends FunSuite {
   }
 
   test("copy from vector") {
-    val expected: Matrix[Int] = Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9))
+    val expected: Matrix = Array(Array(1, 2, 3), Array(4, 5, 6), Array(7, 8, 9))
     val vector = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
 
     val m = Matrix(vector, 3)
