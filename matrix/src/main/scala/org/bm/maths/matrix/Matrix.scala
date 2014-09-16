@@ -18,7 +18,7 @@
  */
 package org.bm.maths.matrix
 
-import java.lang.Math.min
+import java.lang.Math.{abs, max, min, pow, sqrt}
 import java.text.NumberFormat
 
 import scala.util.Random
@@ -43,22 +43,30 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Double) {
   }
 
 
+  def deep = this.mat.deep
+
+  def copy = Matrix(mat)
+
+  def apply(r: Int, c: Int) = mat(r)(c)
+
+  def apply(r: Int): Array[Double] = mat(r)
+
+  def apply(upperLeftCorner: (Int, Int), lowerRightCorner: (Int, Int)): Matrix = submatrix(upperLeftCorner, lowerRightCorner)
+
+  def apply(rowsToKeep: Array[Int], colsToKeep: Array[Int]): Matrix = submatrix(rowsToKeep, colsToKeep)
+
+  def apply(r: Array[Int], j0: Int, j1: Int): Matrix = submatrix(r, j0, j1)
+
+  def update(row: Int, col: Int, value: Double): Unit = mat(col)(row) = value
+
+  def update(rows: (Int, Int), cols: (Int, Int), m: Matrix): Unit = setSubMatrix(rows, cols, m)
+
   def ==(that: Matrix): Boolean = this equals that
 
   override def equals(other: Any): Boolean = other match {
     case that: Matrix => this.deep == that.deep
     case _ => false
   }
-
-  def deep = this.mat.deep
-
-  def apply(r: Int, c: Int) = mat(r)(c)
-
-  def apply(r: Int): Array[Double] = mat(r)
-
-  def update(row: Int, col: Int, value: Double): Unit = mat(col)(row) = value
-
-  def update(rows: (Int, Int), cols: (Int, Int), m: Matrix): Unit = setSubMatrix(rows, cols, m)
 
   def foreach(f: Double => Double): Unit = map(f)
 
@@ -77,30 +85,169 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Double) {
 
   def map(f: Double => Double): Matrix = Matrix(this.mat.flatten.map(f), rowNumber)
 
+  def :+(that: Matrix): Matrix = {
+    require(this.rowNumber == that.rowNumber, "Matrices must have the same number of row")
 
-  def >+(d: Double): Matrix = Matrix(this).map(_ + d)
+    val rowN = rowNumber
+    val colN = colNumber + that.colNumber
 
-  def >-(d: Double): Matrix = Matrix(this).map(_ - d)
+    val m = Array.ofDim[Double](rowN, colN)
 
-  def >*(d: Double): Matrix = Matrix(this).map(_ * d)
+    for {
+      r <- 0 until rowNumber
+      c <- 0 until colNumber
+    } yield m(r)(c) = this(r)(c)
 
-  def >/(d: Double): Matrix = Matrix(this).map(_ / d)
+    for {
+      r <- 0 until rowN
+      c <- colNumber until colN
+    } yield m(r)(c) = that(r)(c - colNumber)
 
-  def *(that: Matrix): Matrix = ???
+    Matrix(m)
+  }
 
-  def /(that: Matrix): Matrix = ???
+  def norm1: Double = {
+    var f = 0.0
+    for (j <- 0 until colNumber) {
+      var s = 0.0
+      for (i <- 0 until rowNumber) {
+        s += abs(this(i)(j))
+      }
+      f = max(f, s)
+    }
+    f
+  }
 
-  def `\`(that: Matrix): Matrix = ???
+  def norm2: Double = svd.norm2
 
-  def +(that: Matrix): Matrix = ???
+  /**
+   * Infinity norm : maximum row sum
+   * @return
+   */
+  def normInf = (
+    for {
+      r <- 0 until rowNumber
+    } yield this(r)
+    ).map(a => a.sum).max
 
-  def -(that: Matrix): Matrix = ???
+  /**
+   * Frobenius Norm : square root of sum of squares of all elements
+   * @return
+   */
+  def normF: Double =
+    sqrt((for {
+      r <- 0 until rowNumber
+      c <- 0 until colNumber
+    } yield pow(this(r)(c), 2)
+      ).sum)
+
+
+  def +:(that: Matrix): Matrix = that :+ this
+
+  def :+(d: Double): Matrix = Matrix(this).map(_ + d)
+
+  def +:(d: Double): Matrix = this :+ d
+
+  def :-(d: Double): Matrix = Matrix(this).map(_ - d)
+
+  def -:(d: Double): Matrix = this :- d
+
+  def :*(d: Double): Matrix = Matrix(this).map(_ * d)
+
+  def *:(d: Double): Matrix = this :* d
+
+  def :/(d: Double): Matrix = Matrix(this).map(_ / d)
+
+  def /:(d: Double): Matrix = this :/ d
+
+  def :\(d: Double): Matrix = Matrix(this).map(d / _)
+
+  def \:(d: Double): Matrix = this :\ d
+
+  def det: Double = lu.det
+
+  def rank: Int = svd.rank
+
+  def cond: Double = svd.cond
+
+  /**
+   * sum of diagonal elements
+   * @return
+   */
+  def trace: Double = (for {
+    i <- 0 until min(rowNumber, colNumber)
+  } yield this(i, i)).sum
+
+  def lu: LUDecomposition = LUDecomposition(this)
+
+  def qr: QRDecomposition = QRDecomposition(this)
+
+  def chol: CholeskyDecomposition = CholeskyDecomposition(this)
+
+  def svd: SingularValueDecomposition = SingularValueDecomposition(this)
+
+  def eig: EigenValueDecomposition = EigenValueDecomposition(this)
+
+  def unary_- : Matrix = Matrix(rowNumber, colNumber, (r, c) => -this(r)(c))
+
+  def +(that: Matrix): Matrix = {
+    checkSize(that)
+    Matrix(rowNumber, colNumber, (r, c) => this(r)(c) + that(r)(c))
+  }
+
+  def -(that: Matrix): Matrix = {
+    checkSize(that)
+    Matrix(rowNumber, colNumber, (r, c) => this(r)(c) - that(r)(c))
+  }
+
+  def *(that: Matrix): Matrix = {
+    require(colNumber == that.rowNumber, "Matrix inner dimensions must agree.")
+
+    val X: Matrix = Matrix(rowNumber, that.colNumber)
+    val thatColj = Array.ofDim[Double](that.rowNumber)
+
+    for (j <- 0 until that.colNumber) {
+      for (k <- 0 until colNumber) {
+        thatColj(k) = that(k)(j)
+      }
+      for (i <- 0 until rowNumber) {
+        val thisRowi = this(i)
+        var s: Double = 0.0
+        for (k <- 0 until colNumber) {
+          s += thisRowi(k) * thatColj(k)
+        }
+        X(i)(j) = s
+      }
+    }
+
+    X
+  }
+
+  def inv: Matrix = solve(Matrix.identity(rowNumber, rowNumber))
 
   /**
    * transpose
    * @return
    */
   def t: Matrix = Matrix(colNumber, rowNumber, (r, c) => this(c)(r))
+
+
+  def solve(that: Matrix): Matrix = if (rowNumber == colNumber) lu.solve(that) else qr.solve(that)
+
+  def solveTranspose(that: Matrix) = t.solve(that.t)
+
+  import org.bm.maths.matrix.Matrix.Implicits.numberFormat
+
+  override def toString = asString()
+
+  def asString()(implicit nf: NumberFormat) = {
+    val sb: StringBuilder = new StringBuilder()
+    mat.foreach(doubleArray =>
+      sb append doubleArray.map(d => nf.format(d)).mkString("[", "  ", "]\n")
+    )
+    sb.toString()
+  }
+
 
   private[matrix] def setSubMatrix(rows: (Int, Int), cols: (Int, Int), m: Matrix): Unit = {
     val startRow = rows._1
@@ -115,13 +262,14 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Double) {
 
   }
 
-  def apply(upperLeftCorner: (Int, Int), lowerRightCorner: (Int, Int)): Matrix = submatrix(upperLeftCorner, lowerRightCorner)
-
   private[matrix] def submatrix(rows: (Int, Int), cols: (Int, Int)): Matrix = {
     val startRow = rows._1
     val endRow = rows._2
     val startCol = cols._1
     val endCol = cols._2
+
+    require(startRow <= endRow, "Start row must be lower or equal than end row")
+    require(startCol <= endCol, "Start column must be lower or equal than end column")
 
     val rowN = endRow - startRow + 1
     val colN = endCol - startCol + 1
@@ -136,26 +284,47 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Double) {
     Matrix(m)
   }
 
-  /**
-   * sum of diagonal elements
-   * @return
-   */
-  def trace: Double = (for {
-    i <- 0 until min(rowNumber, colNumber)
-  } yield this(i, i)).sum
+  private[matrix] def submatrix(rowsToKeep: Array[Int], colsToKeep: Array[Int]): Matrix = {
+    val rowN = rowsToKeep.length
+    val colN = colsToKeep.length
 
-  import org.bm.maths.matrix.Matrix.Implicits.numberFormat
+    val m = Array.ofDim[Double](rowN, colN)
 
-  override def toString = asString()
+    for {
+      r <- 0 until rowN
+      c <- 0 until colN
+    } yield m(r)(c) = this(rowsToKeep(r))(colsToKeep(c))
 
-  def asString()(implicit nf: NumberFormat) = {
-    val sb: StringBuilder = new StringBuilder()
-    mat.foreach(doubleArray =>
-      sb append doubleArray.map(d => nf.format(d)).mkString("[", "  ", "]\n")
-    )
-    sb.toString()
+    Matrix(m)
   }
 
+  private[matrix] def submatrix(r: Array[Int], j0: Int, j1: Int): Matrix = {
+    val X = Matrix(r.length, j1 - j0 + 1)
+
+    try {
+      for {
+        i <- 0 until r.length
+        j <- j0 to j1
+      } yield X(i)(j - j0) = this(r(i))(j)
+    } catch {
+      case e: ArrayIndexOutOfBoundsException => throw new ArrayIndexOutOfBoundsException("Submatrix indices")
+    }
+    X
+  }
+
+  private[matrix] def hypot(a: Double, b: Double): Double =
+    if (abs(a) > abs(b)) {
+      val r = b / a
+      abs(a) * sqrt(1 + r * r)
+    } else if (b != 0) {
+      val r = b / a
+      abs(b) * sqrt(1 + r * r)
+    } else 0
+
+  private[matrix] def checkSize(that: Matrix) {
+    require(rowNumber == that.rowNumber, "Matrices must have same number of rows")
+    require(colNumber == that.colNumber, "Matrices must have same number of columns")
+  }
 
 }
 
@@ -185,18 +354,15 @@ object Matrix {
 
   def apply(array: Array[Array[Double]]): Matrix = {
     val rowNumber = array.length
-    if (rowNumber == 0) throw new IllegalArgumentException("Array length should not be null, no cols")
-
     val colNumber = array(0).length
-    if (colNumber == 0) throw new IllegalArgumentException("Array length should not be null, no rows")
 
     Matrix(rowNumber, colNumber, (r, c) => array(r)(c))
   }
 
   def apply(vector: Array[Double], numberOfRows: Int): Matrix = {
-    if (vector.length % numberOfRows != 0) throw new IllegalArgumentException(s"Array length must be a multiple of $numberOfRows.")
-    val numberOfCols = vector.length / numberOfRows
+    require((vector.length % numberOfRows) == 0, s"Vector length must be a multiple of $numberOfRows.")
 
+    val numberOfCols = vector.length / numberOfRows
     Matrix(numberOfRows, numberOfCols, (r, c) => vector(r * numberOfRows + c))
   }
 
