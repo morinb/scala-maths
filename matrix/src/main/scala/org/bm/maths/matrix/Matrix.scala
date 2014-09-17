@@ -312,15 +312,6 @@ case class Matrix(rowNumber: Int, colNumber: Int, func: (Int, Int) => Double) {
     X
   }
 
-  private[matrix] def hypot(a: Double, b: Double): Double =
-    if (abs(a) > abs(b)) {
-      val r = b / a
-      abs(a) * sqrt(1 + r * r)
-    } else if (b != 0) {
-      val r = b / a
-      abs(b) * sqrt(1 + r * r)
-    } else 0
-
   private[matrix] def checkSize(that: Matrix) {
     require(rowNumber == that.rowNumber, "Matrices must have same number of rows")
     require(colNumber == that.colNumber, "Matrices must have same number of columns")
