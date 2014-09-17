@@ -8,9 +8,9 @@ import java.lang.Math.{abs, min}
  */
 case class LUDecomposition(matrix: Matrix) {
   val LU = matrix.copy
-  var m: Int = LU.rowNumber
-  var n: Int = LU.colNumber
-  var piv: Array[Int] = Array.ofDim[Int](m)
+  val m: Int = LU.rowNumber
+  val n: Int = LU.colNumber
+  val piv: Array[Int] = Array.ofDim[Int](m)
 
 
   for {
