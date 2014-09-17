@@ -62,7 +62,7 @@ case class CholeskyDecomposition(matrix: Matrix) {
     }
 
     // Solve L'*X = Y
-    for(k <- n-1 until 0 by -1) {
+    for(k <- n-1 to 0 by -1) {
       for(j <- 0 until nx) {
         for(i <- k+1 until n) {
           X(k)(j) -= X(i)(j)*L(i)(k)

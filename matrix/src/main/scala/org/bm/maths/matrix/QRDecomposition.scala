@@ -59,7 +59,7 @@ case class QRDecomposition(matrix: Matrix) extends Maths {
 
   def Q: Matrix = {
     val X = Matrix(m, n)
-    for (k <- n - 1 until 0 by -1) {
+    for (k <- n - 1 to 0 by -1) {
       for (i <- 0 until m) {
         X(i)(k) = 0.0
       }
@@ -101,7 +101,7 @@ case class QRDecomposition(matrix: Matrix) extends Maths {
       }
     }
     // Solve R*X = Y
-    for (k <- n - 1 until 0 by -1) {
+    for (k <- n - 1 to 0 by -1) {
       for {j <- 0 until nx} yield X(k)(j) /= Rdiag(k)
       for {
         i <- 0 until k
